@@ -1,0 +1,5 @@
+* checks end game state from center to outside for better performance
+* rollout policy prioritize near-center cells
+* how about a draw????
+* font size for tic tac toe
+* inherit trees from prev turns

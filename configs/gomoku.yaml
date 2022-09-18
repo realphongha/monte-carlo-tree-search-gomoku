@@ -1,0 +1,13 @@
+board_game:
+  name: gomoku
+  m: 15
+  n: 15
+  k: 5
+  cell_size: 30
+  fps: 60
+bot:
+  algorithm: mcts
+  config:
+    thinking_time: 1.0  # in seconds
+    processes: 8  # number of processes
+    policy: simple
