@@ -5,7 +5,6 @@ from typing import Tuple
 from mcts.mcts import MonteCarloTreeSearchMixin
 from .mnk_bot_base import MnkGameBotBase
 from .board import MnkBoard
-from utils import constants
 
 
 class MnkState:
@@ -83,10 +82,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         self.rollout_count = 0
         loop_times = 0
         while time.time()-start < self.thinking_time:
-            node = self.selection()
-            node = self.expansion(node)
-            winner = self.simulation(node)
-            self.backpropagation(node, winner)
+            self.loop()
             loop_times += 1
         best_child = max(self.root.children.values(), key=self.score)
 

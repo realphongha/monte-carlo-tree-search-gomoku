@@ -4,6 +4,13 @@ from utils.mixin import PerfMonitorMixin
 
 
 class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
+    
+    def loop(self) -> None:
+        node = self.selection()
+        node = self.expansion(node)
+        winner = self.simulation(node)
+        self.backpropagation(node, winner)
+
     @abstractmethod
     def selection(self):
         pass
