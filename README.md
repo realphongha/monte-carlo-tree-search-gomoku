@@ -10,7 +10,15 @@ AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-
 ## Cython optimization
 * For end-game board checking
 ## Parallelism
-* to be added soon...
+* Single-run parallelization:
+```
+@inproceedings{cazenave2007parallelization,
+  title={On the parallelization of UCT},
+  author={Cazenave, Tristan and Jouandeau, Nicolas},
+  booktitle={Computer games workshop},
+  year={2007}
+}
+```
 
 # How to install
 First `git clone https://github.com/realphongha/mnk-game-bot.git` to clone this repo.  
