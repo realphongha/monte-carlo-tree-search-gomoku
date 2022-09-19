@@ -6,7 +6,6 @@ from pygame.font import Font
 from utils import constants, exception
 from .board import MnkBoard
 from .mnk_bot_base import MnkGameBotBase
-from .mcts_mnkgame import MonteCarloTreeSearchMnkGame
 
 
 pygame.init()
@@ -18,18 +17,22 @@ class Game:
     BOT_TURN = 2
     ENDED = 3
 
-    def __init__(self, m: int, n: int, k:int, cell_size: int, 
-            name: str, fps: int) -> None:
+    def __init__(self, m: int, n: int, k: int, cell_size: int, name: str, 
+            fps: int, menu_font_size: int, button_font_size: int, 
+            symbol_font_size: int) -> None:
         # MAGIC NUMBERS: 1 and 2 are player symbols, 0 is empty cell
         self.cell_size = cell_size
         self.m, self.n, self.k = m, n, k
         self.w = m * cell_size
-        self.h = n * cell_size + cell_size
+        self.h = n * cell_size * 8 // 7
         self.center_w = self.w / 2
         self.center_h = self.h / 2
-        self.button_font_size = self.h // 15
-        self.button_font_size_small = self.h // 15 * 3 // 4
-        self.symbol_font_size = self.h // 15
+        self.menu_font_size = menu_font_size
+        self.button_font_size = button_font_size
+        self.symbol_font_size = symbol_font_size
+        # self.button_font_size = self.h // 15
+        # self.button_font_size_small = self.h // 15 * 3 // 4
+        # self.symbol_font_size = self.h // 15
         self.board =  MnkBoard(m, n, k)
         self.title = name.title()
         self.fps = fps
@@ -108,34 +111,34 @@ class Game:
         self.render_rect((self.center_w-self.w//4, self.center_h-self.h//16*5, 
             self.w//2, self.h//4), constants.ORANGE, rect_width=0,
             border_radius=self.cell_size,
-            text_str="You go first", text_size=self.button_font_size,
+            text_str="You go first", text_size=self.menu_font_size,
             text_color=constants.WHITE), \
         self.render_rect((self.center_w-self.w//4, self.center_h+self.h//16, 
             self.w//2, self.h//4), constants.ORANGE, rect_width=0,
             border_radius=self.cell_size, 
-            text_str="Bot goes first", text_size=self.button_font_size,
+            text_str="Bot goes first", text_size=self.menu_font_size,
             text_color=constants.WHITE)
 
     def render_ingame_button(self) -> Tuple[Rect, Rect]:
         return \
         self.render_rect((0, self.n * self.cell_size+1, 
-            self.w//4, self.cell_size-2), constants.ORANGE, rect_width=0,
-            border_radius=self.cell_size//4,
-            text_str="Back to menu", text_size=self.button_font_size_small,
+            self.w//4, self.n*self.cell_size//7 - 2), constants.ORANGE, 
+            rect_width=0, border_radius=self.cell_size//4,
+            text_str="Back to menu", text_size=self.button_font_size,
             text_color=constants.WHITE), \
         self.render_rect((self.w-self.w//4, self.n * self.cell_size+1, 
-            self.w//4, self.cell_size-2), constants.ORANGE, rect_width=0,
-            border_radius=self.cell_size//4, 
-            text_str="Reset board", text_size=self.button_font_size_small,
+            self.w//4, self.n*self.cell_size//7 - 2), constants.ORANGE, 
+            rect_width=0, border_radius=self.cell_size//4, 
+            text_str="Reset board", text_size=self.button_font_size,
             text_color=constants.WHITE)
 
     def render_endgame_noti(self, res):
         who_won = "You" if res == 1 else \
             ("Computer" if res == 2 else "No one")
         text_color = constants.GREEN if res == 1 else \
-            (constants.RED if res == 2 else constants.YELLOW)
+            (constants.RED if res == 2 else constants.BLACK)
         self.render_rect((self.w//4, self.n * self.cell_size, 
-            self.w//2, self.cell_size), constants.WHITE, rect_width=-1,
+            self.w//2, self.n*self.cell_size//7), constants.WHITE, rect_width=-1,
             text_str="%s won!" % who_won, 
             text_size=self.button_font_size,
             text_color=text_color)
@@ -232,12 +235,16 @@ class Game:
 
 
 if __name__ == "__main__":
+    from .mcts_mnkgame import MonteCarloTreeSearchMnkGame
     config = {
         "board_game": {
             "name": "gomoku",
-            "m": 3, "n": 3, "k": 3,
-            "cell_size": 90,
-            "fps": 60
+            "m": 15, "n": 15, "k": 5,
+            "cell_size": 30,
+            "fps": 60,
+            "menu_font_size": 30,
+            "button_font_size": 25,
+            "symbol_font_size": 30,
         },
         "bot": {
             "algorithm": "mcts",
@@ -245,6 +252,7 @@ if __name__ == "__main__":
                 "thinking_time": 1.0,  # in seconds
                 "processes": 8,  # number of processes
                 "policy": "simple",
+                "exploration_const": 1.4142135623730951
             }
         }
     }

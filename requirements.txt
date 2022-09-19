@@ -1,3 +1,4 @@
 pygame==2.1.2
 numpy==1.20.0
 Cython==0.29.23
+PyYAML==5.4.1

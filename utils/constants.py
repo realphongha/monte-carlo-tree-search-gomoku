@@ -1,5 +1,5 @@
-# game:
-## colors:
+# game
+## colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 ORANGE = (248, 151, 60)
@@ -9,5 +9,4 @@ YELLOW = (255, 255, 0)
 PAPER_WHITE_COLOR = (249, 251, 255)
 PENCIL_COLOR = (107, 107, 107)
 
-# mcts:
-EXPLORATION_CONST = 1.4142135623730951
+# mcts

@@ -72,13 +72,15 @@ class MnkState:
 
 
 class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
-    def __init__(self, thinking_time, processes, policy) -> None:
+    def __init__(self, thinking_time, processes, policy, exploration_const) -> None:
         super().__init__(thinking_time, processes)
         self.policy = policy
+        self.c = exploration_const
 
     def solve(self, board: MnkBoard, turn: int) -> Tuple[int, int]:
         start = time.time()
         self.root = MnkState(board, turn, self.policy, None, None)
+        self.rollout_count = 0
         loop_times = 0
         while time.time()-start < self.thinking_time:
             node = self.selection()
@@ -87,10 +89,20 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
             self.backpropagation(node, winner)
             loop_times += 1
         best_child = max(self.root.children.values(), key=self.score)
-        print("Score:")
-        for move, child in self.root.children.items():
-            print(move, self.score(child), child.r, child.n)
-        print("Loop %i times!" % loop_times)
+
+        # MCTS stats
+        children = list()
+        for child in self.root.children.values():
+            children.append((child, self.score(child)))
+        top_k = 5 if len(children) >= 5 else len(children)
+        children.sort(key=lambda child: -child[1])
+        print("\nTop %i moves:" % top_k)
+        for child, score in children[:5]:
+            print("Move:", child.last_move, "- score: %.4f - w: %.4f - n: %.4f" %
+                (score, child.r, child.n)
+            )
+        print("Looped %i times and played %i rollouts!" % 
+            (loop_times, self.rollout_count))
         return best_child.last_move
 
     def selection(self):
@@ -98,7 +110,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         while not node.is_leaf():
             selected_node = max(node.children.values(), key=lambda child: 
                 self.ucb(
-                    child.r, child.n, constants.EXPLORATION_CONST, node.n
+                    child.r, child.n, self.c, node.n
                 ))
             node = selected_node
         return node
@@ -120,6 +132,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         return node
 
     def simulation(self, node):
+        self.rollout_count += 1
         return node.rollout()
 
     def backpropagation(self, node, winner):
