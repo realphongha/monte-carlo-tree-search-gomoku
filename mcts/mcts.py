@@ -1,6 +1,8 @@
 import math
+import cython
 from abc import ABC, abstractmethod
 from utils.mixin import PerfMonitorMixin
+from .mcts_algorithms import ucb, score
 
 
 class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
@@ -29,4 +31,12 @@ class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
 
     @staticmethod
     def ucb(w, n, c, t):
-        return (w / n + c * math.sqrt(math.log(t)/n)) if n != 0 else math.inf
+        ret = ucb(w, n, c, t)
+        # ret = (w / n + c * math.sqrt(math.log(t)/n)) if n != 0 else math.inf
+        return ret
+
+    @staticmethod
+    def score(node):
+        ret = score(node.r, node.n)
+        # ret = node.r/node.n if node.n != 0 else -math.inf
+        return ret

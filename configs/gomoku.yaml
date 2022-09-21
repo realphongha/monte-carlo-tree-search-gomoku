@@ -11,7 +11,8 @@ board_game:
 bot:
   algorithm: mcts
   config:
-    thinking_time: 1.0  # in seconds
-    processes: 8  # number of processes
+    max_thinking_time: 1.0  # in seconds
+    max_rollout: 1000000000
+    processes: 4  # number of processes
     policy: simple
     exploration_const: 1.4142135623730951

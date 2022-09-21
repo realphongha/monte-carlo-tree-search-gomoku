@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import cython
-from .board_algorithms import check_board
+from .board_algorithms import check_board, get_possible_pos
 from typing import Tuple
 from utils.mixin import PerfMonitorMixin
 
@@ -26,8 +26,11 @@ class MnkBoard(PerfMonitorMixin):
         self.board = np.zeros((self.m, self.n), dtype=np.uint8)
 
     def get_possible_pos(self):
-        i, j = np.where(self.board == 0)
-        return np.stack([j, i]).T
+        # old inefficient python code:
+        # i, j = np.where(self.board == 0)
+        # return np.stack([j, i]).T
+        # nEw EfFiCiEnT cYtHoN cOdE:
+        return get_possible_pos(self.board)
 
     def put(self, turn: int, position: Tuple[int, int], display=True):
         assert turn == 1 or turn == 2, "Invalid player: %i" % turn
@@ -37,6 +40,7 @@ class MnkBoard(PerfMonitorMixin):
                     "Player" if turn == 1 else "Bot", position[0], position[1]
                 ))
 
+    # why are we still here???
     def check_valid(self):
         unique, counts = np.unique(self.board, return_counts=True)
         count_dict = dict(zip(unique, counts))
@@ -44,7 +48,7 @@ class MnkBoard(PerfMonitorMixin):
             return False
         return True
 
-    def check_end_game(self):
+    def check_endgame(self):
         start = time.time()
         res = check_board(self.board, self.k)
         # res = self.check_board()
@@ -112,6 +116,6 @@ if __name__ == "__main__":
     board = np.array(board).astype(np.uint8)
     mnk_board = MnkBoard(board.shape[1], board.shape[0], k, board)
     for _ in tqdm(range(10)):
-        res = mnk_board.check_end_game()
+        res = mnk_board.check_endgame()
     print(res)
     mnk_board.get_perf("check_board", True)

@@ -61,3 +61,19 @@ def check_board(np.ndarray[np.uint8_t, ndim=2] board_np, int num):
         if res: 
             return res
     return 0
+
+
+@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.wraparound(False)   # Deactivate negative indexing.
+def get_possible_pos(np.uint8_t[:, :] board):
+    # finds all possible moves on board
+    cdef Py_ssize_t h = board.shape[0]
+    cdef Py_ssize_t w = board.shape[1]
+    cdef Py_ssize_t i = 0
+    cdef Py_ssize_t j = 0
+    res = []
+    for i in range(h):
+        for j in range(w):
+            if board[i][j] == 0:
+                res.append((j, i))
+    return res

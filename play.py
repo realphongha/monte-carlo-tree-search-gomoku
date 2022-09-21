@@ -1,18 +1,12 @@
 import argparse
-from calendar import c
 import yaml
 from mnk_game.game import Game
-from mnk_game.mcts_mnkgame import MonteCarloTreeSearchMnkGame
 
 
 def main(cfg):
     game = Game(**cfg["board_game"])
-    bot_alg = cfg["bot"]["algorithm"]
-    if bot_alg == "mcts":
-        bot = MonteCarloTreeSearchMnkGame(**cfg["bot"]["config"])
-    else:
-        raise NotImplementedError("%s algorithm is not implemented!" % bot_alg)
-    game.add_bot(bot)
+    game.set_bot(cfg["bot"]["algorithm"])
+    game.add_bot_config(cfg["bot"]["config"])
     game.main()
 
 

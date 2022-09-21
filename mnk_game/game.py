@@ -5,7 +5,7 @@ from pygame import Rect
 from pygame.font import Font
 from utils import constants, exception
 from .board import MnkBoard
-from .mnk_bot_base import MnkGameBotBase
+from .mcts_mnkgame import mcts_solve
 
 
 pygame.init()
@@ -46,17 +46,28 @@ class Game:
         self.cursor = pygame.SYSTEM_CURSOR_ARROW
         self.rect_cache = dict()
         self.bot = None
+        self.bot_config = None
 
-    def add_bot(self, bot: MnkGameBotBase):
-        self.bot = bot
+    def set_bot(self, name: str):
+        self.bot = name
+
+    def add_bot_config(self, cfg):
+        self.bot_config = cfg
 
     def bot_play(self) -> None:
         if self.bot is None:
             pos = self.board.get_possible_pos()
-            index = random.randrange(0, pos.shape[0])
+            index = random.randrange(0, len(pos))
             i, j = pos[index]
+        elif self.bot == "mcts":
+            res = mcts_solve(**self.bot_config, board=self.board, turn=1)
+            if res == (-1, -1):
+                raise Exception("MCTS doesn't yield result!")
+            else:
+                i, j = res
         else:
-            i, j = self.bot.solve(self.board, 1)
+            raise NotImplementedError("%s algorithm is not implemented!" % 
+                self.bot)
         self.board.put(2, (i, j))
 
     def add_rect_to_cache(self, rect: Rect, left: int, top: int, 
@@ -173,7 +184,7 @@ class Game:
                             self.clear_rect_cache()
             else:
                 if self.state != Game.ENDED:
-                    if self.board.get_possible_pos().shape[0] == 0:
+                    if len(self.board.get_possible_pos()) == 0:
                         self.state = Game.ENDED
                         res = 0
                 rects = self.render_board()
@@ -208,7 +219,7 @@ class Game:
                                             if self.board.board[i][j] != 0:
                                                 raise exception.Break
                                             self.board.put(1, (j, i))
-                                            res = self.board.check_end_game()
+                                            res = self.board.check_endgame()
                                             if res:
                                                 self.state = Game.ENDED
                                             else:
@@ -217,7 +228,7 @@ class Game:
 
                     elif self.state == Game.BOT_TURN:
                         self.bot_play()
-                        res = self.board.check_end_game()
+                        res = self.board.check_endgame()
                         if res:
                             self.state = Game.ENDED
                         else:
@@ -235,28 +246,4 @@ class Game:
 
 
 if __name__ == "__main__":
-    from .mcts_mnkgame import MonteCarloTreeSearchMnkGame
-    config = {
-        "board_game": {
-            "name": "gomoku",
-            "m": 15, "n": 15, "k": 5,
-            "cell_size": 30,
-            "fps": 60,
-            "menu_font_size": 30,
-            "button_font_size": 25,
-            "symbol_font_size": 30,
-        },
-        "bot": {
-            "algorithm": "mcts",
-            "config": {
-                "thinking_time": 1.0,  # in seconds
-                "processes": 8,  # number of processes
-                "policy": "simple",
-                "exploration_const": 1.4142135623730951
-            }
-        }
-    }
-    game = Game(**config["board_game"])
-    bot = MonteCarloTreeSearchMnkGame(**config["bot"]["config"])
-    game.add_bot(bot)
-    game.main()
+    pass
