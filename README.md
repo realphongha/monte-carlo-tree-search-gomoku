@@ -3,17 +3,7 @@ AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-
 
 # Implemented stuffs
 ## Bot algorithms
-* Monte Carlo tree search
-## Game configs
-* Tic-tac-toe
-* Gomoku 7x7
-* Gomoku 15x15
-## Cython optimization
-* For end-game board checking
-* For getting possible moves on board
-* For calculating UCB + score (not so big improvement)
-## Parallelism
-* Single-run parallelization:
+* Monte Carlo tree search (MCTS) with Single-run parallelization:
 ```
 @inproceedings{cazenave2007parallelization,
   title={On the parallelization of UCT},
@@ -21,6 +11,17 @@ AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-
   booktitle={Computer games workshop},
   year={2007}
 }
+```
+## Game configs
+* Tic-tac-toe
+* Gomoku 7x7
+* Gomoku 15x15 (MCTS seems not to be effective yet because of speed problem)
+## Cython optimization
+* MCTS:
+```
+For end-game board checking
+For getting possible moves on board
+For calculating UCB + score (not so big improvement)
 ```
 
 # How to install
