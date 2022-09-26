@@ -5,10 +5,13 @@ AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-
 ## Bot algorithms
 * Monte Carlo tree search
 ## Game configs
-* Gomoku
 * Tic-tac-toe
+* Gomoku 7x7
+* Gomoku 15x15
 ## Cython optimization
 * For end-game board checking
+* For getting possible moves on board
+* For calculating UCB + score (not so big improvement)
 ## Parallelism
 * Single-run parallelization:
 ```

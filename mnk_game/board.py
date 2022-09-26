@@ -49,11 +49,36 @@ class MnkBoard(PerfMonitorMixin):
         return True
 
     def check_endgame(self):
-        start = time.time()
+        # start = time.time()
         res = check_board(self.board, self.k)
         # res = self.check_board()
-        self.update_perf("check_board", time.time()-start)
+        # self.update_perf("check_board", time.time()-start)
         return res
+
+    @staticmethod
+    def get_nearby_pos(pos, h, w):
+        # gets <= 8 nearby pos:
+        for i in (-1, 0, 1):
+            for j in (-1, 0, 1):
+                if not i == j == 0 and 0 <= pos[0]+i < w and 0 <= pos[1]+j < h:
+                    yield pos[0]+i, pos[1]+j
+
+    @staticmethod
+    def get_dist_to_nearest_symbol(pos, board, stop=2):
+        visited = np.zeros(board.shape, dtype=np.uint8)
+        queue = [pos]
+        visited[pos[1], pos[0]] = 1
+        while queue:
+            s = queue.pop(0)
+            if board[s[1], s[0]] != 0:
+                return visited[pos[1], pos[0]]-1
+            if visited[s[1], s[0]] > stop + 1:
+                continue
+            for i, j in MnkBoard.get_nearby_pos(s, *board.shape):
+                if visited[j, i] == 0:
+                    queue.append((i, j))
+                    visited[j, i] = visited[s[1], s[0]] + 1
+        return stop + 1
 
     def check_board(self):
         # inefficient python function for comparing speed

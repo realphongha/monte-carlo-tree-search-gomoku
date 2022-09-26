@@ -1,6 +1,3 @@
-* checks end game state from center to outside for better performance
 * rollout policy prioritize near-center cells
-* how about a draw????
-* font size for tic tac toe
-* inherit trees from prev turns
-* bug: player symbol doesn't appear immediately
+* more cython optimization
+* checks endgame state from center to outside for better performance (maybe unneccessary because current board-checking function is extremely fast)

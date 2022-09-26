@@ -6,6 +6,10 @@ from .mcts_algorithms import ucb, score
 
 
 class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
+
+    root = None
+    rollout_count = 0
+    total_rollout = 0
     
     def loop(self) -> None:
         node = self.selection()

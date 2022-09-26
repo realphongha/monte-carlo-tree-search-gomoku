@@ -47,6 +47,7 @@ class Game:
         self.rect_cache = dict()
         self.bot = None
         self.bot_config = None
+        self.moves = list()
 
     def set_bot(self, name: str):
         self.bot = name
@@ -60,7 +61,8 @@ class Game:
             index = random.randrange(0, len(pos))
             i, j = pos[index]
         elif self.bot == "mcts":
-            res = mcts_solve(**self.bot_config, board=self.board, turn=1)
+            res = mcts_solve(**self.bot_config, board=self.board, turn=1, 
+                last_moves=self.moves[-2:])
             if res == (-1, -1):
                 raise Exception("MCTS doesn't yield result!")
             else:
@@ -69,6 +71,7 @@ class Game:
             raise NotImplementedError("%s algorithm is not implemented!" % 
                 self.bot)
         self.board.put(2, (i, j))
+        self.moves.append((i, j))
 
     def add_rect_to_cache(self, rect: Rect, left: int, top: int, 
             width: int, height: int):
@@ -189,6 +192,7 @@ class Game:
                         res = 0
                 rects = self.render_board()
                 back_rect, reset_rect = self.render_ingame_button()
+                pygame.display.update()
                 try:
                     remaining_events = list()
                     for event in pygame.event.get():
@@ -206,6 +210,7 @@ class Game:
                                     Game.PLAYER_TURN, Game.BOT_TURN
                                 ))
                                 self.board.reset_board()
+                                self.moves = list()
                                 raise exception.Break
                         remaining_events.append(event)
                             
@@ -219,6 +224,7 @@ class Game:
                                             if self.board.board[i][j] != 0:
                                                 raise exception.Break
                                             self.board.put(1, (j, i))
+                                            self.moves.append((j, i))
                                             res = self.board.check_endgame()
                                             if res:
                                                 self.state = Game.ENDED

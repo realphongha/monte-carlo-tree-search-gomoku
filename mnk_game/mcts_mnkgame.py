@@ -9,6 +9,9 @@ from .mnk_bot_base import MnkGameBotBase
 from .board import MnkBoard
 
 
+last_tree = None
+
+
 class MnkState:
     def __init__(self, board: MnkBoard, turn, policy, last_move, parent, 
             children=None, n=0, r=0) -> None:
@@ -32,8 +35,8 @@ class MnkState:
     def next_states(self):
         pos = self.board.get_possible_pos()
         states = list()
-        for k in range(len(pos)):
-            i, j = pos[k]
+        for p in pos:
+            i, j = p
             new_board = self.board.duplicate()
             new_board.board[j][i] = 3-self.turn
             new_state = MnkState(new_board, 3-self.turn, self.policy, 
@@ -61,12 +64,30 @@ class MnkState:
         pos = board.get_possible_pos()
         if len(pos) == 0:
             return -1, -1
-        index = random.randrange(0, len(pos))
-        return pos[index]
+        return random.choice(pos)
 
-    def prob_rollout_policy(self):
+    @staticmethod
+    def prob_rollout_policy(board):
         # cells near previously marked cell get greater probability to be chosen
-        pass
+        pos = board.get_possible_pos()
+        num = len(pos)
+        if num == 0:
+            return -1, -1
+        dummy = np.arange(len(pos))
+        nearby = [i for i, p in enumerate(pos) if board.get_dist_to_nearest_symbol(p, board.board) <= 2]
+        num_nearby = len(nearby)
+        num_faraway = num - num_nearby
+        if num_nearby == num:
+            prob = [1.0 / num] * len(pos)
+        elif num_faraway == num:
+            prob = [1.0 / num] * len(pos)
+        else:
+            prob = list()
+            for i in range(len(pos)):
+                prob.append(0.9 / num_nearby if i in nearby else (0.1 / num_faraway))
+        index = np.random.choice(dummy, p=prob)
+        print(pos[index])
+        return pos[index]
 
     def rollout(self):
         test_board = self.board.duplicate()
@@ -75,6 +96,8 @@ class MnkState:
         while res == 0:
             if self.policy == "simple":
                 i, j = self.simple_rollout_policy(test_board)
+            elif self.policy == "prob":
+                i, j = self.prob_rollout_policy(test_board)
             else:
                 raise NotImplementedError("Policy %s is not implemented!" %
                     self.policy)
@@ -92,19 +115,30 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         self.max_rollout = max_rollout
         self.policy = policy
         self.c = exploration_const
-        self.root = None
-        self.rollout_count = 0
+
+    def inherit(self, last_moves: Tuple[Tuple[int, int], Tuple[int, int]]):
+        # inherits previous tree root
+        m1, m2 = last_moves
+        if self.root == None:
+            print("Initializing new tree...")
+            return None
+        try:
+            print("Inheriting previous tree root...")
+            new_root = self.root.children[m1].children[m2]
+            return new_root
+        except KeyError:
+            print("Moves not found in previous tree. Initializing new tree...")
+            return None
 
     def solve(self, board: MnkBoard, turn: int, start_time=None) -> Tuple[int, int]:
         start = start_time if start_time else time.time()
         self.root = MnkState(board, turn, self.policy, None, None)
-        self.rollout_count = 0
         while time.time()-start < self.max_thinking_time and \
-                self.rollout_count < self.max_rollout:
+                self.total_rollout < self.max_rollout:
             self.loop()
 
     def get_results(self):
-        if self.rollout_count > 0:
+        if self.total_rollout > 0:
             best_child = max(self.root.children.values(), key=self.score)
             children = list()
             for child in self.root.children.values():
@@ -117,7 +151,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
                     (score, child.r, child.n)
                 )
         print("Played %i rollouts!" % self.rollout_count)
-        return best_child.last_move if self.rollout_count > 0 else (-1, -1)
+        print("Total: %i rollouts (inherited from previous trees)!" % self.total_rollout)
+        return best_child.last_move if self.total_rollout > 0 else (-1, -1)
 
     def selection(self):
         node = self.root
@@ -147,6 +182,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
 
     def simulation(self, node):
         self.rollout_count += 1
+        self.total_rollout += 1
         return node.rollout()
 
     def backpropagation(self, node, winner):
@@ -180,13 +216,15 @@ def merge_trees(trees):
         tree2 = trees[i+1]
         merge_nodes(tree1.root, tree2.root)
         tree2.rollout_count += tree1.rollout_count
+        tree2.total_rollout += tree1.total_rollout
 
 
-def merge_nodes(node1, node2):
+def merge_nodes(node1, node2, merge_children=True):
     for last_move, child in node2.children.items():
         if last_move in node1.children:
             # merges 2 nodes' offsprings
-            merge_nodes(node1.children[last_move], child)
+            if merge_children:
+                merge_nodes(node1.children[last_move], child)
             # merges 2 nodes
             child.merge(node1.children[last_move], node2)
     for last_move, child in node1.children.items():
@@ -196,24 +234,31 @@ def merge_nodes(node1, node2):
 
 
 def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy, 
-        exploration_const, board, turn):
+        exploration_const, board, turn, last_moves):
+    global last_tree
     start = time.time()
     args = list()
     for i in range(processes):
         tree = MonteCarloTreeSearchMnkGame(max_thinking_time, 
             max_rollout//processes, policy, exploration_const)
+        if last_tree is not None and len(last_moves) == 2:
+            root = last_tree.inherit(last_moves)
+            if root is not None:
+                tree.root = root
+                tree.total_rollout = root.n
         args.append((i, tree, board.duplicate(), turn, start))
     pool = multiprocessing.Pool(processes)
     trees = pool.starmap(run, args)
-    trees = [tree for tree in trees if tree.rollout_count > 0]
+    trees = [tree for tree in trees if tree.total_rollout > 0]
     if not trees:
         return -1, -1
-    print("\nSeparated trees:")
+    print("\nSEPARATED TREES:")
     for tree in trees:
         tree.get_results()
     merge_trees(trees)
     final_tree = trees[-1]
-    print("\nCombined results:")
+    last_tree = final_tree
+    print("\nCOMBINED RESULTS:")
     res = final_tree.get_results()
     last = time.time() - start
     print("Time: %.2f, games per second: %.2f" % 
@@ -222,11 +267,18 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
 
 
 def mcts_mnk_single_process(max_thinking_time, max_rollout, policy, exploration_const,
-        board, turn):
+        board, turn, last_moves):
+    global last_tree
     start = time.time()
-    tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout, policy,
-            exploration_const)
+    tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout, 
+            policy, exploration_const)
+    if last_tree is not None and len(last_moves) == 2:
+        root = last_tree.inherit(last_moves)
+        if root is not None:
+            tree.root = root
+            tree.total_rollout = root.n
     tree.solve(board, turn)
+    last_tree = tree
     res = tree.get_results()
     last = time.time() - start
     print("Time: %.2f, games per second: %.2f" % 
@@ -234,12 +286,12 @@ def mcts_mnk_single_process(max_thinking_time, max_rollout, policy, exploration_
     return res
 
 def mcts_solve(max_thinking_time, max_rollout, processes, policy, 
-        exploration_const, board, turn):
+        exploration_const, board, turn, last_moves):
     if processes < 1:
         raise Exception("Invalid number of processes: {processes}!")
     elif processes > 1:
         return mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, 
-            policy, exploration_const, board, turn)
+            policy, exploration_const, board, turn, last_moves)
     else:
         return mcts_mnk_single_process(max_thinking_time, max_rollout, policy, 
-            exploration_const, board, turn)
+            exploration_const, board, turn, last_moves)
