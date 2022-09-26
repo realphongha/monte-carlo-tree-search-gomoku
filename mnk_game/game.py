@@ -204,6 +204,8 @@ class Game:
                             if back_rect.collidepoint(event.pos):
                                 self.state = Game.NOT_STARTED
                                 self.clear_rect_cache()
+                                self.board.reset_board()
+                                self.moves = list()
                                 raise exception.Break
                             elif reset_rect.collidepoint(event.pos):
                                 self.state = random.choice((
