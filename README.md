@@ -42,6 +42,10 @@ python setup.py build_ext --inplace
 
 # How to run
 ```
-python play.py --cfg path/to/config/file.yaml
+python play.py --cfg path/to/config_file.yaml
+```
+For example:
+```
+python play.py --cfg configs/tic_tac_toe.yaml
 ```
 
