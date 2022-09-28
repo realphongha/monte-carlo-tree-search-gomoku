@@ -1,3 +1,5 @@
 * rollout policy prioritize near-center cells
-* more cython optimization
+* count nodes instead of rollout_total to avoid duplicate nodes counted
+* pretrained mcts tree and save pretrained tree
 * checks endgame state from center to outside for better performance (maybe unneccessary because current board-checking function is extremely fast)
+* more cython optimization...

@@ -7,12 +7,14 @@ from typing import Tuple
 from mcts.mcts import MonteCarloTreeSearchMixin
 from .mnk_bot_base import MnkGameBotBase
 from .board import MnkBoard
+from .mcts_mnk_algorithms import MnkState
 
 
 last_tree = None
 
 
-class MnkState:
+# replaced by Cython class and not updated 
+class MnkStateOld:
     def __init__(self, board: MnkBoard, turn, policy, last_move, parent, 
             children=None, n=0, r=0) -> None:
         self.board = board
@@ -54,9 +56,8 @@ class MnkState:
             state.r += other.r
         else:
             state = MnkState(self.board.duplicate(), self.turn, self.policy,
-                self.last_move, parent, list(), self.n+other.n, self.r+other.r)
+                self.last_move, parent, self.children, self.n+other.n, self.r+other.r)
         return state
-        
 
     @staticmethod
     def simple_rollout_policy(board):
@@ -86,7 +87,6 @@ class MnkState:
             for i in range(len(pos)):
                 prob.append(0.9 / num_nearby if i in nearby else (0.1 / num_faraway))
         index = np.random.choice(dummy, p=prob)
-        print(pos[index])
         return pos[index]
 
     def rollout(self):
@@ -151,7 +151,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
                     (score, child.r, child.n)
                 )
         print("Played %i rollouts!" % self.rollout_count)
-        print("Total: %i rollouts (inherited from previous trees)!" % self.total_rollout)
+        print("Total: %i rollouts (inherited from previous trees)!" % 
+            self.total_rollout)
         return best_child.last_move if self.total_rollout > 0 else (-1, -1)
 
     def selection(self):
@@ -222,11 +223,14 @@ def merge_trees(trees):
 def merge_nodes(node1, node2, merge_children=True):
     for last_move, child in node2.children.items():
         if last_move in node1.children:
+            # merges 2 nodes
+            ret = child.merge(node1.children[last_move], node2)
+            if not ret:
+                raise Exception("Cannot merge 2 nodes:", child.last_move,
+                    node1.children[last_move].last_move)
             # merges 2 nodes' offsprings
             if merge_children:
                 merge_nodes(node1.children[last_move], child)
-            # merges 2 nodes
-            child.merge(node1.children[last_move], node2)
     for last_move, child in node1.children.items():
         if last_move not in node2.children:
             child.parent = node2
@@ -266,8 +270,8 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
     return res
 
 
-def mcts_mnk_single_process(max_thinking_time, max_rollout, policy, exploration_const,
-        board, turn, last_moves):
+def mcts_mnk_single_process(max_thinking_time, max_rollout, policy, 
+        exploration_const, board, turn, last_moves):
     global last_tree
     start = time.time()
     tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout, 

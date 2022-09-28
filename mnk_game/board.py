@@ -4,14 +4,16 @@ import cython
 from .board_algorithms import check_board, get_possible_pos
 from typing import Tuple
 from utils.mixin import PerfMonitorMixin
+from .board_algorithms import MnkBoard
 
 
-class MnkBoard(PerfMonitorMixin):
+# replaced by Cython class and not updated 
+class MnkBoardOld(PerfMonitorMixin):
     def __init__(self, m: int, n: int, k: int, board_copy=None) -> None:
         # MAGIC NUMBERS: 1 and 2 are player symbols, 0 is empty cell
         self.m = m  # board width
         self.n = n  # board height
-        self.k = k  # k-in-a-row stones for final win
+        self.k = k  # k-in-a-row for final win
         self.board = None  # game board
         if type(board_copy) == np.ndarray and \
                 board_copy.shape == (self.n, self.m):
