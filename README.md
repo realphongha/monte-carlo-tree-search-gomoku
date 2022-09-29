@@ -1,5 +1,5 @@
 # mnk-game-bot
-AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-toe, Gomoku...) with simple Pygame GUI for Player vs. Bot.
+AI bot utilizing Monte Carlo tree search to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-toe, Gomoku...) with simple Pygame GUI for Player vs. Bot.
 
 # Implemented stuffs
 ## Bot algorithms
@@ -21,6 +21,7 @@ AI bot to play [m,n,k-games](https://en.wikipedia.org/wiki/M,n,k-game) (Tic-tac-
 ```
 For end-game board checking
 For getting possible moves on board
+For MnkBoard and MnkState classes
 For calculating UCB + score (not so big improvement)
 ```
 
