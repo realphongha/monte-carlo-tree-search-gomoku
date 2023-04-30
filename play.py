@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import sys
 from mnk_game.game import Game
 
 
@@ -22,5 +23,5 @@ if __name__ == "__main__":
             cfg = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
-            quit()
+            sys.exit()
     main(cfg)

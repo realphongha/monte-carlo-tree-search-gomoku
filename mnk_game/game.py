@@ -1,3 +1,4 @@
+import sys
 import pygame
 import random
 from typing import Tuple
@@ -168,7 +169,7 @@ class Game:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
-                        quit()
+                        sys.exit()
                     if event.type == pygame.MOUSEMOTION:
                         if you_rect.collidepoint(event.pos) or \
                             bot_rect.collidepoint(event.pos):
@@ -198,7 +199,7 @@ class Game:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
                             pygame.quit()
-                            quit()
+                            sys.exit()
                         if event.type == pygame.MOUSEBUTTONUP and \
                             event.button == 1:  # left mouse
                             if back_rect.collidepoint(event.pos):

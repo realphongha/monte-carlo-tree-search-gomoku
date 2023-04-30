@@ -138,7 +138,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
             self.loop()
 
     def get_results(self):
-        if self.total_rollout > 0:
+        best_child = None
+        if self.total_rollout > 0 and len(self.root.children.values()) > 0:
             best_child = max(self.root.children.values(), key=self.score)
             children = list()
             for child in self.root.children.values():
@@ -153,7 +154,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         print("Played %i rollouts!" % self.rollout_count)
         print("Total: %i rollouts (inherited from previous trees)!" % 
             self.total_rollout)
-        return best_child.last_move if self.total_rollout > 0 else (-1, -1)
+        return best_child.last_move if (best_child and self.total_rollout > 0) else (-1, -1)
 
     def selection(self):
         node = self.root
