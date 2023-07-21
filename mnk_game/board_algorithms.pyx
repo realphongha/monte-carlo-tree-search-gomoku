@@ -140,8 +140,8 @@ def get_possible_pos(np.uint8_t[:, :] board):
 
 cdef class MnkBoard:
     cdef:
-        int m
-        int n
+        public int m
+        public int n
         int k
         public np.ndarray board
 
@@ -160,7 +160,7 @@ cdef class MnkBoard:
         return MnkBoard(self.m, self.n, self.k, self.board)
 
     def reset_board(self):
-        self.board = np.zeros((self.m, self.n), dtype=np.uint8)
+        self.board = np.zeros((self.n, self.m), dtype=np.uint8)
 
     def get_possible_pos(self):
         return get_possible_pos(self.board)
@@ -186,9 +186,9 @@ cdef class MnkBoard:
                     ret_pos.append((pos[0]+i, pos[1]+j))
         return ret_pos
 
-    def get_dist_to_nearest_symbol(self, pos, int stop=2):
+    cdef int get_dist_to_nearest_symbol(self, pos, int stop=2):
         cdef Py_ssize_t i, j
-        cdef np.uint8_t[:, :] visited = np.zeros((self.m, self.n), dtype=np.uint8)
+        cdef np.uint8_t[:, :] visited = np.zeros((self.n, self.m), dtype=np.uint8)
         queue = [pos]
         visited[pos[1], pos[0]] = 1
         while queue:
@@ -202,3 +202,11 @@ cdef class MnkBoard:
                     queue.append((i, j))
                     visited[j, i] = visited[s[1], s[0]] + 1
         return stop + 1
+
+    cpdef bint is_near_a_symbol(self, pos):
+        cdef Py_ssize_t i, j
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if not i == j == 0 and 0 <= pos[0]+i < self.m and 0 <= pos[1]+j < self.n and self.board[pos[1]+j][pos[0]+i] != 0:
+                    return True
+        return False 

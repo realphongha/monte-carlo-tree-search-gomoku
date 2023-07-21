@@ -15,6 +15,7 @@ AI bot utilizing Monte Carlo tree search to play [m,n,k-games](https://en.wikipe
 ## Game configs
 * Tic-tac-toe
 * Gomoku 7x7
+* Gomoku 9x9
 * Gomoku 15x15 (MCTS seems not to be effective yet because of speed problem)
 ## Cython optimization
 * MCTS:

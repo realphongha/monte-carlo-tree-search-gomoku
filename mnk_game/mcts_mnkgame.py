@@ -1,9 +1,10 @@
 import time
 import random
 import multiprocessing
-import numpy as np
-from queue import Empty
 from typing import Tuple
+
+import numpy as np
+
 from mcts.mcts import MonteCarloTreeSearchMixin
 from .mnk_bot_base import MnkGameBotBase
 from .board import MnkBoard
@@ -11,102 +12,6 @@ from .mcts_mnk_algorithms import MnkState
 
 
 last_tree = None
-
-
-# replaced by Cython class and not updated 
-class MnkStateOld:
-    def __init__(self, board: MnkBoard, turn, policy, last_move, parent, 
-            children=None, n=0, r=0) -> None:
-        self.board = board
-        self.turn = turn
-        self.policy = policy
-        self.last_move = last_move
-        self.parent = parent
-        self.children = children if children else dict()
-        self.n = n
-        self.r = r
-
-    def is_leaf(self):
-        if not self.children:
-            return True
-        for child in self.children.values():
-            if child.n == 0:
-                return True
-        return False
-
-    def next_states(self):
-        pos = self.board.get_possible_pos()
-        states = list()
-        for p in pos:
-            i, j = p
-            new_board = self.board.duplicate()
-            new_board.board[j][i] = 3-self.turn
-            new_state = MnkState(new_board, 3-self.turn, self.policy, 
-                (i, j), self)
-            states.append(new_state)
-        return states
-
-    def merge(self, other, parent, in_place=True):
-        # self and other must have similar parents to merge
-        if self.last_move != other.last_move:
-            return False
-        if in_place:
-            state = self
-            state.n += other.n
-            state.r += other.r
-        else:
-            state = MnkState(self.board.duplicate(), self.turn, self.policy,
-                self.last_move, parent, self.children, self.n+other.n, self.r+other.r)
-        return state
-
-    @staticmethod
-    def simple_rollout_policy(board):
-        # completely random moves
-        pos = board.get_possible_pos()
-        if len(pos) == 0:
-            return -1, -1
-        return random.choice(pos)
-
-    @staticmethod
-    def prob_rollout_policy(board):
-        # cells near previously marked cell get greater probability to be chosen
-        pos = board.get_possible_pos()
-        num = len(pos)
-        if num == 0:
-            return -1, -1
-        dummy = np.arange(len(pos))
-        nearby = [i for i, p in enumerate(pos) if board.get_dist_to_nearest_symbol(p, board.board) <= 2]
-        num_nearby = len(nearby)
-        num_faraway = num - num_nearby
-        if num_nearby == num:
-            prob = [1.0 / num] * len(pos)
-        elif num_faraway == num:
-            prob = [1.0 / num] * len(pos)
-        else:
-            prob = list()
-            for i in range(len(pos)):
-                prob.append(0.9 / num_nearby if i in nearby else (0.1 / num_faraway))
-        index = np.random.choice(dummy, p=prob)
-        return pos[index]
-
-    def rollout(self):
-        test_board = self.board.duplicate()
-        turn = self.turn
-        res = test_board.check_endgame()
-        while res == 0:
-            if self.policy == "simple":
-                i, j = self.simple_rollout_policy(test_board)
-            elif self.policy == "prob":
-                i, j = self.prob_rollout_policy(test_board)
-            else:
-                raise NotImplementedError("Policy %s is not implemented!" %
-                    self.policy)
-            if i == j == -1:
-                return 0
-            test_board.board[j][i] = turn
-            turn = 3-turn
-            res = test_board.check_endgame()
-        return res
 
 
 class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
@@ -119,7 +24,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
     def inherit(self, last_moves: Tuple[Tuple[int, int], Tuple[int, int]]):
         # inherits previous tree root
         m1, m2 = last_moves
-        if self.root == None:
+        if self.root is None:
             print("Initializing new tree...")
             return None
         try:
@@ -141,7 +46,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         best_child = None
         if self.total_rollout > 0 and len(self.root.children.values()) > 0:
             best_child = max(self.root.children.values(), key=self.score)
-            children = list()
+            children = []
             for child in self.root.children.values():
                 children.append((child, self.score(child)))
             top_k = 5 if len(children) >= 5 else len(children)
@@ -159,13 +64,13 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
     def selection(self):
         node = self.root
         while not node.is_leaf():
-            selected_node = max(node.children.values(), key=lambda child: 
+            selected_node = max(node.children.values(), key=lambda child:
                 self.ucb(
                     child.r, child.n, self.c, node.n
                 ))
             node = selected_node
         return node
-        
+
     def choosing_policy(self, states):
         return random.choice(states)
 
@@ -173,7 +78,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         if node.board.check_endgame() == 0:
             next_states = node.next_states()
             next_states = [state for state in next_states if state.n == 0]
-            old_states = list()
+            old_states = []
             for state in next_states:
                 if state.last_move not in node.children:
                     node.children[state.last_move] = state
@@ -192,7 +97,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
             reward = 1
         elif winner == 0:  # a draw
             reward = 0.5
-        else: 
+        else:
             reward = 0
         while node != self.root:
             node.n += 1
@@ -242,9 +147,9 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
         exploration_const, board, turn, last_moves):
     global last_tree
     start = time.time()
-    args = list()
+    args = []
     for i in range(processes):
-        tree = MonteCarloTreeSearchMnkGame(max_thinking_time, 
+        tree = MonteCarloTreeSearchMnkGame(max_thinking_time,
             max_rollout//processes, policy, exploration_const)
         if last_tree is not None and len(last_moves) == 2:
             root = last_tree.inherit(last_moves)
@@ -266,16 +171,15 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
     print("\nCOMBINED RESULTS:")
     res = final_tree.get_results()
     last = time.time() - start
-    print("Time: %.2f, games per second: %.2f" % 
-        (last, final_tree.rollout_count/last))
+    print("Time: %.2f, games per second: %.2f" % (last, final_tree.rollout_count/last))
     return res
 
 
-def mcts_mnk_single_process(max_thinking_time, max_rollout, policy, 
+def mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
         exploration_const, board, turn, last_moves):
     global last_tree
     start = time.time()
-    tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout, 
+    tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout,
             policy, exploration_const)
     if last_tree is not None and len(last_moves) == 2:
         root = last_tree.inherit(last_moves)
@@ -286,11 +190,11 @@ def mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
     last_tree = tree
     res = tree.get_results()
     last = time.time() - start
-    print("Time: %.2f, games per second: %.2f" % 
-        (last, tree.rollout_count/last))
+    print("Time: %.2f, games per second: %.2f" % (last, tree.rollout_count/last))
     return res
 
-def mcts_solve(max_thinking_time, max_rollout, processes, policy, 
+
+def mcts_solve(max_thinking_time, max_rollout, processes, policy,
         exploration_const, board, turn, last_moves):
     if processes < 1:
         raise Exception("Invalid number of processes: {processes}!")

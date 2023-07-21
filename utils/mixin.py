@@ -4,9 +4,9 @@ import numpy as np
 class PerfMonitorMixin:
     def update_perf(self, name, latency):
         if not hasattr(self, 'perf_monitor'):
-            self.perf_monitor = dict()
+            self.perf_monitor = {}
         if name not in self.perf_monitor:
-            self.perf_monitor[name] = list()
+            self.perf_monitor[name] = []
         self.perf_monitor[name].append(latency)
 
     def get_perf(self, name, display=True):
