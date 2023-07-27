@@ -163,9 +163,9 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
     trees = [tree for tree in trees if tree.total_rollout > 0]
     if not trees:
         return -1, -1
-    print("\nSEPARATED TREES:")
-    for tree in trees:
-        tree.get_results()
+    # print("\nSEPARATED TREES:")
+    # for tree in trees:
+    #     tree.get_results()
     merge_trees(trees)
     final_tree = trees[-1]
     last_tree = final_tree
