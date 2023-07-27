@@ -57,7 +57,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
                     (score, child.r, child.n)
                 )
         print("Played %i rollouts!" % self.rollout_count)
-        print("Total: %i rollouts (inherited from previous trees)!" % 
+        print("Total: %i rollouts (inherited from previous trees)!" %
             self.total_rollout)
         return best_child.last_move if (best_child and self.total_rollout > 0) else (-1, -1)
 
@@ -143,7 +143,7 @@ def merge_nodes(node1, node2, merge_children=True):
             node2.children[last_move] = child
 
 
-def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy, 
+def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
         exploration_const, board, turn, last_moves):
     global last_tree
     start = time.time()
@@ -156,7 +156,8 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
             if root is not None:
                 tree.root = root
                 tree.total_rollout = root.n
-        args.append((i, tree, board.duplicate(), turn, start))
+        random_seed = random.randint(0, 1<<32)
+        args.append((random_seed, tree, board.duplicate(), turn, start))
     pool = multiprocessing.Pool(processes)
     trees = pool.starmap(run, args)
     trees = [tree for tree in trees if tree.total_rollout > 0]
@@ -199,8 +200,8 @@ def mcts_solve(max_thinking_time, max_rollout, processes, policy,
     if processes < 1:
         raise Exception("Invalid number of processes: {processes}!")
     elif processes > 1:
-        return mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, 
+        return mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes,
             policy, exploration_const, board, turn, last_moves)
     else:
-        return mcts_mnk_single_process(max_thinking_time, max_rollout, policy, 
+        return mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
             exploration_const, board, turn, last_moves)
