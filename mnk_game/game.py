@@ -144,7 +144,7 @@ class Game:
         for i in range(self.n):
             rects.append([])
             for j in range(self.m):
-                symbol = self.board.board[i][j]
+                symbol = self.board.index(j, i)
                 rects[i].append(
                     self.render_rect(
                         (
@@ -311,7 +311,7 @@ class Game:
                                 for i, row in enumerate(rects):
                                     for j, rect in enumerate(row):
                                         if rect.collidepoint(event.pos):
-                                            if self.board.board[i][j] != 0:
+                                            if self.board.index(j, i) != 0:
                                                 raise exception.Break
                                             self.board.put(1, (j, i))
                                             self.moves.append((j, i))
