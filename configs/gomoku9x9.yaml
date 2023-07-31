@@ -4,7 +4,7 @@ board_game:
   n: 9
   k: 5
   cell_size: 40
-  fps: 60
+  fps: 30
   menu_font_size: 40
   button_font_size: 20
   symbol_font_size: 40
@@ -16,3 +16,4 @@ bot:
     processes: 4  # number of processes
     policy: simple
     exploration_const: 1.4142135623730951
+    inherit_last_tree: True

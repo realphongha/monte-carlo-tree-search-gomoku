@@ -36,6 +36,8 @@ class Game:
     ) -> None:
         # MAGIC NUMBERS: 1 and 2 are player symbols, 0 is empty cell
         self.cell_size = cell_size
+        assert m >= k and n >= k, "m and n must be larger than k"
+        assert k >= 3, "k must be larger than 3"
         self.m, self.n, self.k = m, n, k
         self.w = m * cell_size
         self.h = n * cell_size * 8 // 7
@@ -73,12 +75,13 @@ class Game:
         self.bot_config = cfg
 
     def bot_play(self) -> None:
+        tree = None
         if self.bot is None:
             pos = self.board.get_possible_pos()
             index = random.randrange(0, len(pos))
             i, j = pos[index]
         elif self.bot == "mcts":
-            res = mcts_solve(
+            res, tree = mcts_solve(
                 **self.bot_config, board=self.board, turn=1, last_moves=self.moves[-2:]
             )
             if res == (-1, -1):
@@ -89,6 +92,7 @@ class Game:
             raise NotImplementedError("%s algorithm is not implemented!" % self.bot)
         self.board.put(2, (i, j))
         self.moves.append((i, j))
+        return tree, (i, j)
 
     def add_rect_to_cache(
         self, rect: Rect, left: int, top: int, width: int, height: int
@@ -220,13 +224,7 @@ class Game:
             text_color=constants.WHITE,
         )
 
-    def render_endgame_noti(self, res):
-        who_won = "You" if res == 1 else ("Computer" if res == 2 else "No one")
-        text_color = (
-            constants.GREEN
-            if res == 1
-            else (constants.RED if res == 2 else constants.BLACK)
-        )
+    def render_ingame_bottom_text(self, text, text_color):
         self.render_rect(
             (
                 self.w // 4,
@@ -236,13 +234,24 @@ class Game:
             ),
             constants.WHITE,
             rect_width=-1,
-            text_str="%s won!" % who_won,
+            text_str=text,
             text_size=self.button_font_size,
             text_color=text_color,
         )
 
+    def render_endgame_noti(self, res):
+        who_won = "You" if res == 1 else ("Computer" if res == 2 else "No one")
+        text_color = (
+            constants.GREEN
+            if res == 1
+            else (constants.RED if res == 2 else constants.BLACK)
+        )
+        self.render_ingame_bottom_text("%s won!" % who_won, text_color)
+        
     def main(self):
         res = 0
+        last_tree = None
+        current_winrate = None
         while True:
             pygame.mouse.set_cursor(self.cursor)
             self.window.fill(constants.PAPER_WHITE_COLOR)
@@ -304,6 +313,11 @@ class Game:
                         remaining_events.append(event)
 
                     if self.state == Game.PLAYER_TURN:
+                        if current_winrate is not None:
+                            status_text = "Winrate: %.2f%%" % current_winrate
+                            self.render_ingame_bottom_text(
+                                status_text, 
+                                constants.BLACK)
                         for event in remaining_events:
                             if (
                                 event.type == pygame.MOUSEBUTTONUP and event.button == 1
@@ -323,7 +337,31 @@ class Game:
                                             raise exception.Break
 
                     elif self.state == Game.BOT_TURN:
-                        self.bot_play()
+                        if last_tree is not None:
+                            bot_move = last_tree.root.children[last_move]
+                            this_move = bot_move.children.get((j, i), None)
+                            if this_move.n != 0:
+                                current_winrate = this_move.score() * 100
+                            else:
+                                current_winrate = None
+                        else:
+                            current_winrate = None
+                        status_text = "Thinking..."
+                        if current_winrate is not None:
+                            status_text = "Winrate: %.2f%%. " % current_winrate + status_text
+                        self.render_ingame_bottom_text(
+                            status_text, 
+                            constants.BLACK)
+                        pygame.display.update()
+                        last_tree, last_move = self.bot_play()
+                        if last_tree is not None:
+                            winrate = last_tree.get_move_winrate(last_move)
+                            if winrate is not None:
+                                current_winrate = (1 - winrate) * 100
+                            else:
+                                current_winrate = None
+                        else:
+                            current_winrate = None
                         res = self.board.check_endgame()
                         if res:
                             self.state = Game.ENDED

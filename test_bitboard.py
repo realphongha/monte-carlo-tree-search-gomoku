@@ -53,6 +53,16 @@ def won(bb, m, n, k):
         return True
     return False
 
+    
+def is_near_a_symbol(bb, pos, h, w):
+    bitmask = 0
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if not i == j == 0 and 0 <= pos[0]+i < w and 0 <= pos[1]+j < h:
+                print("add")
+                bitmask += 1 << (h - 1 - pos[1] - j + (pos[0]+i) * (h+1))
+    return bb & bitmask
+
 
 def put(bb, i, j, h, w):
     # i - height
@@ -60,9 +70,11 @@ def put(bb, i, j, h, w):
     bb += (1 << (i_ + j*(h+1)))
     return bb
 
+
 def get(bb, i, j, h):
     # i - height
     return bb & (1 << (h - 1 - i + j*(h+1))) != 0
+
 
 if __name__ == "__main__":
     board = [[0, 1, 0, 0],
@@ -80,3 +92,4 @@ if __name__ == "__main__":
     print(get(bb, 1, 0, 4))
     bb = put(bb, 1, 0, 4, 4)
     print(get(bb, 1, 0, 4))
+    print(is_near_a_symbol(bb, (3, 0), h, w))

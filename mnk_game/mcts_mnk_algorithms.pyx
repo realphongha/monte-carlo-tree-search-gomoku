@@ -2,6 +2,7 @@
 import random
 import numpy as np
 cimport numpy as np
+from libc.math cimport INFINITY
 
 
 cdef class MnkState:
@@ -26,6 +27,9 @@ cdef class MnkState:
         self.children = children if children else {}
         self.n = n
         self.r = r
+
+    def score(self):
+        return self.r / self.n if self.n != 0 else -INFINITY
 
     def is_leaf(self):
         if not self.children:

@@ -82,7 +82,7 @@ cdef class MnkBoard:
 
     def put(self, int turn, position, display=True):
         cdef int i, j 
-        cdef mpz pos
+        cdef mpz bitmask
         # assert turn == 1 or turn == 2, "Invalid player: %i" % turn
         if display:
             print("%s played (%i, %i)" % (
@@ -91,18 +91,16 @@ cdef class MnkBoard:
         turn -= 1
         i, j = position
         j = self.n - 1 - j 
-        pos = mpz(1) << (j + i*(self.n+1))
-        # assert pos >= 0, f"Int overflow: 1 << {j + i*(self.n+1)} = {pos}"
-        self.board[turn] += pos
+        bitmask = mpz(1) << (j + i*(self.n+1))
+        # assert bitmask >= 0, f"Int overflow: 1 << {j + i*(self.n+1)} = {bitmask}"
+        self.board[turn] += bitmask
     
     cdef bint get(self, int turn, int i, int j):
-        cdef bint found 
-        cdef mpz pos
+        cdef mpz bitmask
         turn -= 1
-        pos = mpz(1) << (self.n - 1 - j + i*(self.n+1))
-        found = (self.board[turn] & pos) != 0
-        # assert pos >= 0, f"Int overflow: 1 << {self.n - 1 - j + i*(self.n+1)} = {pos}"
-        return found 
+        bitmask = mpz(1) << (self.n - 1 - j + i*(self.n+1))
+        # assert bitmask >= 0, f"Int overflow: 1 << {self.n - 1 - j + i*(self.n+1)} = {bitmask}"
+        return  self.board[turn] & bitmask
 
     def index(self, int i, int j):
         if self.get(1, i, j):
@@ -126,9 +124,10 @@ cdef class MnkBoard:
 
     cpdef bint is_near_a_symbol(self, pos):
         cdef Py_ssize_t i, j
+        cdef mpz bitmask = mpz(0)
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if not i == j == 0 and 0 <= pos[0]+i < self.m and 0 <= pos[1]+j < self.n \
-                   and not self.is_empty(pos[0]+i, pos[1]+j):
-                    return True
-        return False 
+                if not i == j == 0 and 0 <= pos[0]+i < self.m and 0 <= pos[1]+j < self.n: 
+                    bitmask += mpz(1) << (self.n - 1 - pos[1] - j + (pos[0]+i) * (self.n+1))
+        return (self.board[0] & bitmask) or (self.board[1] & bitmask)
+

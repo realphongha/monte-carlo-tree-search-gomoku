@@ -2,7 +2,5 @@
 * limits number of nodes instead of number of rollouts
 * pretrained mcts tree and save pretrained tree
 * checks endgame state from center to outside for better performance (maybe unneccessary because current board-checking function is extremely fast)
-* add pre-condition: min(m, n) >= k, k >= 3...
-* use bitboards with np.uint16 (check maximum board size 16x16)
 * calculates tree when opponent playing
-* show win rate at any turn
+* smart policy: block when detects 3 in a line
