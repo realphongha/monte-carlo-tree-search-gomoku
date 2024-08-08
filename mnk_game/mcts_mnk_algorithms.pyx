@@ -2,6 +2,7 @@
 import random
 import numpy as np
 cimport numpy as np
+from libc.math cimport INFINITY
 
 
 cdef class MnkState:
@@ -27,6 +28,9 @@ cdef class MnkState:
         self.n = n
         self.r = r
 
+    def score(self):
+        return self.r / self.n if self.n != 0 else -INFINITY
+
     def is_leaf(self):
         if not self.children:
             return True
@@ -40,7 +44,8 @@ cdef class MnkState:
         states = []
         for p in pos:
             new_board = self.board.duplicate()
-            new_board.board[p[1]][p[0]] = 3-self.turn
+
+            new_board.put(3 - self.turn, p, False)
             new_state = MnkState(new_board, 3-self.turn, self.policy, 
                 p, self)
             states.append(new_state)
@@ -80,7 +85,7 @@ cdef class MnkState:
                 raise NotImplementedError("Policy %s is not implemented!" %
                     self.policy)
             pos.pop(index)
-            test_board.board[j][i] = turn
+            test_board.put(turn, (i, j), False)
             turn = 3-turn
             res = test_board.check_endgame(i, j)
         return res

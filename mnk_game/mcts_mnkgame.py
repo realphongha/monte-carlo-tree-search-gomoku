@@ -42,6 +42,10 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
                 self.total_rollout < self.max_rollout:
             self.loop()
 
+    def get_move_winrate(self, move):
+        child = self.root.children.get(move, None)
+        return child.score() if child.n != 0 else None
+
     def get_results(self):
         best_child = None
         if self.total_rollout > 0 and len(self.root.children.values()) > 0:
@@ -144,14 +148,14 @@ def merge_nodes(node1, node2, merge_children=True):
 
 
 def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
-        exploration_const, board, turn, last_moves):
+        exploration_const, board, turn, last_moves, inherit_last_tree=True):
     global last_tree
     start = time.time()
     args = []
     for i in range(processes):
         tree = MonteCarloTreeSearchMnkGame(max_thinking_time,
             max_rollout//processes, policy, exploration_const)
-        if last_tree is not None and len(last_moves) == 2:
+        if inherit_last_tree and last_tree is not None and len(last_moves) == 2:
             root = last_tree.inherit(last_moves)
             if root is not None:
                 tree.root = root
@@ -173,16 +177,16 @@ def mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes, policy,
     res = final_tree.get_results()
     last = time.time() - start
     print("Time: %.2f, games per second: %.2f" % (last, final_tree.rollout_count/last))
-    return res
+    return res, final_tree
 
 
 def mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
-        exploration_const, board, turn, last_moves):
+        exploration_const, board, turn, last_moves, inherit_last_tree=True):
     global last_tree
     start = time.time()
     tree = MonteCarloTreeSearchMnkGame(max_thinking_time, max_rollout,
             policy, exploration_const)
-    if last_tree is not None and len(last_moves) == 2:
+    if inherit_last_tree and last_tree is not None and len(last_moves) == 2:
         root = last_tree.inherit(last_moves)
         if root is not None:
             tree.root = root
@@ -192,16 +196,16 @@ def mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
     res = tree.get_results()
     last = time.time() - start
     print("Time: %.2f, games per second: %.2f" % (last, tree.rollout_count/last))
-    return res
+    return res, tree
 
 
 def mcts_solve(max_thinking_time, max_rollout, processes, policy,
-        exploration_const, board, turn, last_moves):
+        exploration_const, inherit_last_tree, board, turn, last_moves):
     if processes < 1:
         raise Exception("Invalid number of processes: {processes}!")
     elif processes > 1:
         return mcts_mnk_multi_proc(max_thinking_time, max_rollout, processes,
-            policy, exploration_const, board, turn, last_moves)
+            policy, exploration_const, board, turn, last_moves, inherit_last_tree)
     else:
         return mcts_mnk_single_process(max_thinking_time, max_rollout, policy,
-            exploration_const, board, turn, last_moves)
+            exploration_const, board, turn, last_moves, inherit_last_tree)
