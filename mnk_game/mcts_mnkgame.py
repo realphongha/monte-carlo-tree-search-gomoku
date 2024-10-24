@@ -7,18 +7,20 @@ import numpy as np
 
 from mcts.mcts import MonteCarloTreeSearchMixin
 from .mnk_bot_base import MnkGameBotBase
-from board_state.mnk_state import MnkState
+from board_state.mnk_state import MnkState, rollout
 from board_state.mnk_board import MnkBoard
 
 
 class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
     def __init__(self, max_thinking_time, max_rollout, processes, policy,
-                 exploration_const) -> None:
+                 exploration_const, num_simulations) -> None:
         super().__init__(max_thinking_time)
         self.max_rollout = max_rollout
         self.processes = processes
+        self.pool = multiprocessing.Pool(self.processes)
         self.policy = policy
         self.c = exploration_const
+        self.num_simulations = num_simulations
         self.root = None
 
     def update_tree(self, two_last_moves):
@@ -93,11 +95,14 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         return node
 
     def simulation(self, node):
-        self.rollout_count += 1
-        self.total_rollout += 1
-        return node.rollout()
+        self.rollout_count += self.num_simulations
+        self.total_rollout += self.num_simulations
+        if self.num_simulations == 1:
+            return [node.rollout()]
+        args = [(node.board.duplicate(), node.turn) for _ in range(self.num_simulations)]
+        return self.pool.starmap(rollout, args)
 
-    def backpropagation(self, node, winner):
+    def backpropagation(self, node, winner, times=1):
         # node.turn means the next player
         if winner == node.turn:
             reward = 0
@@ -106,8 +111,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         else:
             reward = 1
         while node is not None:
-            node.n += 1
-            node.r += reward
+            node.n += times
+            node.r += reward * times
             node = node.parent
             reward = 1-reward
 

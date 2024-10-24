@@ -50,15 +50,18 @@ cdef class MnkState:
 
     def rollout(self):
         test_board = self.board.duplicate()
-        cdef int turn = self.turn
-        cdef int res = test_board.check_endgame()
-        cdef int i, j, index
-        cdef list pos = test_board.get_possible_pos()
-        while res == 0 and len(pos) != 0:
-            index = random.randrange(0, len(pos))
-            i, j = pos.pop(index)
-            test_board.put(turn, (i, j), False)
-            turn = -turn
-            res = test_board.check_endgame(i, j)
-        return res
+        return rollout(test_board, self.turn)
+
+
+def rollout(board, int turn):
+    cdef int res = board.check_endgame()
+    cdef int i, j, index
+    cdef list pos = board.get_possible_pos()
+    while res == 0 and len(pos) != 0:
+        index = random.randrange(0, len(pos))
+        i, j = pos.pop(index)
+        board.put(turn, (i, j), False)
+        turn = -turn
+        res = board.check_endgame(i, j)
+    return res
 

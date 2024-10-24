@@ -220,6 +220,7 @@ class MnkGUI:
                         # bot turn
                         status_text = " Bot thinking..."
                         self.render_ingame_bottom_text(status_text, colors.BLACK)
+                        pygame.display.update()
                         self.bot_move(possible_pos)
                         res = self.change_state()
                         raise exception.Break

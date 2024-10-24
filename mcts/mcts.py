@@ -1,6 +1,7 @@
 import math
 import cython
 from abc import ABC, abstractmethod
+from collections import Counter
 from utils.perf_monitor import PerfMonitorMixin
 
 
@@ -13,8 +14,10 @@ class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
     def loop(self) -> None:
         node = self.selection()
         node = self.expansion(node)
-        winner = self.simulation(node)
-        self.backpropagation(node, winner)
+        winners = self.simulation(node)
+        winners = Counter(winners)
+        for winner in winners:
+            self.backpropagation(node, winner, times=winners[winner])
 
     @abstractmethod
     def selection(self):
@@ -33,15 +36,6 @@ class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
         pass
 
     @staticmethod
-    def ucb(w, n, c, t):
-        ret = (w / n + c * math.sqrt(math.log(t)/n))
-        return ret
-
-    @staticmethod
-    def score(node):
-        ret = node.r/node.n
-        return ret
-
-    @staticmethod
     def ucb(node, c):
         return node.r/node.n + c * math.sqrt(math.log(node.parent.n)/node.n)
+
