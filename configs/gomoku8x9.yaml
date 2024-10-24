@@ -4,7 +4,7 @@ board_game:
   n: 9
   k: 5
   cell_size: 40
-  fps: 60
+  fps: 5
   menu_font_size: 30
   button_font_size: 18 
   symbol_font_size: 40
@@ -14,6 +14,5 @@ bot:
     max_thinking_time: 5.0  # in seconds
     max_rollout: 1000000000
     processes: 4  # number of processes
-    policy: prob
+    policy: simple
     exploration_const: 1.4142135623730951
-    inherit_last_tree: True

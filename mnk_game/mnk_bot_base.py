@@ -1,7 +1,7 @@
 from typing import Tuple
 import numpy as np
 from abc import ABC, abstractmethod
-from .board import MnkBoard
+from board_state.mnk_board import MnkBoard
 
 
 class MnkGameBotBase(ABC):
@@ -10,5 +10,5 @@ class MnkGameBotBase(ABC):
         self.max_thinking_time = max_thinking_time
 
     @abstractmethod
-    def solve(self, board: MnkBoard, turn: int) -> Tuple[int, int]:
+    def solve(self, board: MnkBoard, turn: int, moves) -> Tuple[int, int]:
         pass

@@ -1,14 +1,14 @@
 import argparse
 import yaml
 import sys
-from mnk_game.game import Game
+from gui.mnk_gui import MnkGUI
+from mnk_game.mcts_mnkgame import MonteCarloTreeSearchMnkGame
 
 
 def main(cfg):
-    game = Game(**cfg["board_game"])
-    game.set_bot(cfg["bot"]["algorithm"])
-    game.add_bot_config(cfg["bot"]["config"])
-    game.main()
+    gui = MnkGUI(**cfg["board_game"])
+    gui.player2 = MonteCarloTreeSearchMnkGame(**cfg["bot"]["config"])
+    gui.main()
 
 
 if __name__ == "__main__":

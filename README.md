@@ -15,7 +15,9 @@ AI bot utilizing Monte Carlo tree search to play [m,n,k-games](https://en.wikipe
 ## Game configs
 * Tic-tac-toe
 * Gomoku 7x7
+* Gomoku 8x9
 * Gomoku 9x9
+* Gomoku 11x11
 * Gomoku 15x15 (MCTS seems not to be effective yet because of speed problem)
 ## Cython optimization
 * MCTS:
@@ -42,12 +44,7 @@ Run:
 python setup.py build_ext --inplace 
 ```
 
-# How to run
+# Play PvB (Bot using MCTS)
 ```
-python play.py --cfg path/to/config_file.yaml
+python play_mcts.py --cfg path/to/{config_file}.yaml
 ```
-For example:
-```
-python play.py --cfg configs/tic_tac_toe.yaml
-```
-

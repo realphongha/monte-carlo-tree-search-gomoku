@@ -4,9 +4,8 @@ from Cython.Build import cythonize
 
 setup(
     ext_modules=cythonize([
-        "mnk_game/board_algorithms.pyx",
-        "mnk_game/mcts_mnk_algorithms.pyx",
-        "mcts/mcts_algorithms.pyx"
+        "board_state/mnk_board.pyx",
+        "board_state/mnk_state.pyx",
     ], annotate=True),
-    include_dirs=[numpy.get_include()]
+    include_dirs=[numpy.get_include()],
 )
