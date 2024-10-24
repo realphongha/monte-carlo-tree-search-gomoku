@@ -49,14 +49,14 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
 
     def get_move_winrate(self, move):
         child = self.root.children.get(move, None)
-        return self.ucb(child, 0) if child.n != 0 else None
+        return self.score(child, 0) if child.n != 0 else None
 
     def get_results(self):
         best_child = None
         if self.total_rollout > 0 and len(self.root.children.values()) > 0:
             children = []
             for child in self.root.children.values():
-                children.append((child, self.ucb(child, 0)))
+                children.append((child, self.score(child, 0)))
             top_k = 5 if len(children) >= 5 else len(children)
             children.sort(key=lambda child: -child[1])
             print("\nTop %i moves:" % top_k)
@@ -74,7 +74,7 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         node = self.root
         while not node.is_leaf():
             selected_node = max(
-                node.children.values(), key=lambda child: self.ucb(child, self.c))
+                node.children.values(), key=lambda child: self.score(child, self.c))
             node = selected_node
         return node
 

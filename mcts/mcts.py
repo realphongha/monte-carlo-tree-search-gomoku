@@ -36,6 +36,7 @@ class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
         pass
 
     @staticmethod
-    def ucb(node, c):
+    def score(node, c):
+        # ucb1
         return node.r/node.n + c * math.sqrt(math.log(node.parent.n)/node.n)
 

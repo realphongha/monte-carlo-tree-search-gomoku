@@ -15,7 +15,8 @@ cdef class MnkState:
         public dict children
         public int n
         public float r
-        public np.ndarray prob 
+        # for alphazero
+        public float prior
 
     def __init__(self, board, int turn, str policy, last_move, 
             MnkState parent, children=None, int n=0, float r=0.0) -> None:
