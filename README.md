@@ -44,7 +44,12 @@ Run:
 python setup.py build_ext --inplace 
 ```
 
-# Play PvB (Bot using MCTS)
+# Play vs Bot
+```bash
+python pvb.py --cfg path/to/{config_file}.yaml
 ```
-python play_mcts.py --cfg path/to/{config_file}.yaml
+
+# Bot vs Bot
+```bash
+python bvb.py --cfg path/to/{config_file}.yaml
 ```

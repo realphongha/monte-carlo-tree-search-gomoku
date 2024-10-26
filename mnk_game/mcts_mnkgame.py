@@ -82,6 +82,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         return random.choice(states)
 
     def expansion(self, node):
+        if node.board.check_endgame():
+            return node
         states = node.get_next_states()
         if not states:
             return node

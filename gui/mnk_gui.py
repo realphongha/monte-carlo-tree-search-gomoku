@@ -119,10 +119,10 @@ class MnkGUI:
 
     def render_board(self):
         rects = []
-        for i in range(self.n):
+        for i in range(self.m):
             rects.append([])
-            for j in range(self.m):
-                symbol = self.board.index(j, i)
+            for j in range(self.n):
+                symbol = self.board.index(i, j)
                 rects[i].append(
                     self.render_rect(
                         (
@@ -157,7 +157,8 @@ class MnkGUI:
 
     def render_endgame_noti(self, res):
         symbol = self.turn_symbols[res]
-        self.render_ingame_bottom_text("%s won!" % symbol, colors.BLACK)
+        text = "Draw!" if symbol is None else f"{symbol} won!"
+        self.render_ingame_bottom_text(text, colors.BLACK)
 
     def move(self, pos):
         self.board.put(self.state, pos)
@@ -209,7 +210,7 @@ class MnkGUI:
                                 for i, row in enumerate(rects):
                                     for j, rect in enumerate(row):
                                         if rect.collidepoint(event.pos):
-                                            if self.board.index(j, i) != 0:
+                                            if self.board.index(i, j) != 0:
                                                 raise exception.Break
                                             self.move((j, i))
                                             res = self.change_state()
