@@ -30,22 +30,18 @@ cdef class MnkState:
         self.r = r
 
     def is_leaf(self):
-        if not self.children:
-            return True
-        for child in self.children.values():
-            if child.n == 0:
-                return True
-        return False
+        return not self.children or self.n == 0
 
-    def next_states(self):
+    def get_next_states(self):
         pos = self.board.get_possible_pos()
         states = []
         for p in pos:
+            assert p not in self.children
             new_board = self.board.duplicate()
-
             new_board.put(self.turn, p, False)
             new_state = MnkState(new_board, -self.turn, self.policy, 
                 p, self)
+            self.children[p] = new_state
             states.append(new_state)
         return states
 

@@ -38,5 +38,7 @@ class MonteCarloTreeSearchMixin(ABC, PerfMonitorMixin):
     @staticmethod
     def score(node, c):
         # ucb1
+        if node.n == 0:
+            return float("inf")
         return node.r/node.n + c * math.sqrt(math.log(node.parent.n)/node.n)
 

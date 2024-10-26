@@ -82,24 +82,17 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         return random.choice(states)
 
     def expansion(self, node):
-        if node.board.check_endgame() == 0 and node.board.get_possible_pos():
-            next_states = node.next_states()
-            next_states = [state for state in next_states if state.n == 0]
-            old_states = []
-            for state in next_states:
-                if state.last_move not in node.children:
-                    node.children[state.last_move] = state
-                old_states.append(node.children[state.last_move])
-            if old_states:
-                node = self.choosing_policy(old_states)
-        return node
+        states = node.get_next_states()
+        if not states:
+            return node
+        return self.choosing_policy(states)
 
     def simulation(self, node):
         self.rollout_count += self.num_simulations
         self.total_rollout += self.num_simulations
         if self.num_simulations == 1:
             return [node.rollout()]
-        # node.board is deep copied due to multiprocessing by default
+        # node.board is deep-copied due to multiprocessing by default
         args = [(node.board, node.turn) for _ in range(self.num_simulations)]
         return self.pool.starmap(rollout, args)
 
