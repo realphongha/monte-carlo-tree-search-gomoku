@@ -99,7 +99,8 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         self.total_rollout += self.num_simulations
         if self.num_simulations == 1:
             return [node.rollout()]
-        args = [(node.board.duplicate(), node.turn) for _ in range(self.num_simulations)]
+        # node.board is deep copied due to multiprocessing by default
+        args = [(node.board, node.turn) for _ in range(self.num_simulations)]
         return self.pool.starmap(rollout, args)
 
     def backpropagation(self, node, winner, times=1):

@@ -183,7 +183,6 @@ class MnkGUI:
     def main(self):
         res = 0
         self.state = random.choice((MnkGUI.PLAYER1_TURN, MnkGUI.PLAYER2_TURN))
-        self.state = MnkGUI.PLAYER1_TURN
         while True:
             pygame.mouse.set_cursor(self.cursor)
             self.window.fill(colors.PAPER_WHITE_COLOR)
