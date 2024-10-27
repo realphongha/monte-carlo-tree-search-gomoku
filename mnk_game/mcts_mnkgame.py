@@ -22,21 +22,28 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
         self.c = exploration_const
         self.num_simulations = num_simulations
         self.root = None
+        self.debug = True
 
     def update_tree(self, two_last_moves):
         try:
-            print("Inheriting previous tree root...")
+            if self.debug:
+                print("Inheriting previous tree root...")
             m1, m2 = two_last_moves
             self.root = self.root.children[m1].children[m2]
             return True
         except KeyError:
-            print("Moves not found in previous tree. Initializing new tree...")
+            if self.debug:
+                print("Moves not found in previous tree. Initializing new tree...")
             return False
+
+    def predict(self, board, turn, moves):
+        return self.solve(board, turn, moves)
 
     def solve(self, board: MnkBoard, turn: int, moves) -> Tuple[int, int]:
         start = time.time()
         if len(moves) < 2 or self.root is None:
-            print("Initializing new tree...")
+            if self.debug:
+                print("Initializing new tree...")
             self.root = MnkState(board, turn, self.policy, None, None)
         else:
             if not self.update_tree(moves[-2:]):
@@ -59,14 +66,17 @@ class MonteCarloTreeSearchMnkGame(MonteCarloTreeSearchMixin, MnkGameBotBase):
                 children.append((child, self.score(child, 0)))
             top_k = 5 if len(children) >= 5 else len(children)
             children.sort(key=lambda child: -child[1])
-            print("\nTop %i moves:" % top_k)
+            if self.debug:
+                print("\nTop %i moves:" % top_k)
             for child, score in children[:5]:
-                print("Move:", child.last_move, "- score: %.4f - w: %i - n: %i" %
-                    (score, child.r, child.n)
-                )
+                if self.debug:
+                    print("Move:", child.last_move, "- score: %.4f - w: %i - n: %i" %
+                        (score, child.r, child.n)
+                    )
             best_child = children[0][0]
-        print("Played %i rollouts!" % self.rollout_count)
-        print("Total: %i rollouts (inherited from previous trees)!" %
+        if self.debug:
+            print("Played %i rollouts!" % self.rollout_count)
+            print("Total: %i rollouts (inherited from previous trees)!" %
             self.total_rollout)
         return best_child.last_move if (best_child and self.total_rollout > 0) else (-1, -1)
 

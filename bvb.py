@@ -7,8 +7,8 @@ from mnk_game.mcts_mnkgame import MonteCarloTreeSearchMnkGame
 
 def main(cfg):
     gui = MnkGUI(**cfg["board_game"])
-    gui.player1 = MonteCarloTreeSearchMnkGame(**cfg["bot"]["config"])
-    gui.player2 = MonteCarloTreeSearchMnkGame(**cfg["bot"]["config"])
+    gui.player1 = MonteCarloTreeSearchMnkGame(**cfg["bot"]["mcts"])
+    gui.player2 = MonteCarloTreeSearchMnkGame(**cfg["bot"]["mcts"])
     gui.main()
 
 
